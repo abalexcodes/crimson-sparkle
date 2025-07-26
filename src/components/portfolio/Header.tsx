@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { ExpandedTabs } from "@/components/ui/expanded-tabs";
+import { RiMenu3Line, RiCloseLine, RiHomeLine, RiCodeSSlashLine, RiProjectorLine, RiContactsLine } from "@remixicon/react";
 import { useState } from "react";
 
 const Header = () => {
@@ -12,11 +13,18 @@ const Header = () => {
   };
 
   const navItems = [
-    { label: 'Home', id: 'hero' },
-    { label: 'Skills', id: 'skills' },
-    { label: 'Projects', id: 'projects' },
-    { label: 'Contact', id: 'contact' },
+    { title: 'Home', icon: RiHomeLine, id: 'hero' },
+    { title: 'Skills', icon: RiCodeSSlashLine, id: 'skills' },
+    { title: 'Projects', icon: RiProjectorLine, id: 'projects' },
+    { title: 'Contact', icon: RiContactsLine, id: 'contact' },
   ];
+
+  const handleTabClick = (title: string) => {
+    const item = navItems.find(nav => nav.title === title);
+    if (item) {
+      scrollToSection(item.id);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -31,21 +39,16 @@ const Header = () => {
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className="text-foreground hover:text-primary transition-smooth relative group"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </button>
-            ))}
+          <div className="hidden md:flex items-center space-x-4">
+            <ExpandedTabs 
+              tabs={navItems}
+              onTabClick={handleTabClick}
+              activeColor="text-primary"
+            />
             
             <Button 
               variant="outline"
-              className="hover:bg-primary hover:text-primary-foreground transition-smooth"
+              className="hover:bg-primary hover:text-primary-foreground transition-smooth ml-4"
               onClick={() => scrollToSection('contact')}
             >
               Let's Talk
@@ -57,7 +60,7 @@ const Header = () => {
             className="md:hidden text-foreground hover:text-primary transition-smooth"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMenuOpen ? <RiCloseLine size={24} /> : <RiMenu3Line size={24} />}
           </button>
         </div>
 
@@ -69,9 +72,10 @@ const Header = () => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="block w-full text-left text-foreground hover:text-primary transition-smooth py-2"
+                  className="flex items-center gap-3 w-full text-left text-foreground hover:text-primary transition-smooth py-2"
                 >
-                  {item.label}
+                  <item.icon className="w-4 h-4" />
+                  {item.title}
                 </button>
               ))}
               
