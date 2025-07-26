@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ExpandedTabs } from "@/components/ui/expanded-tabs";
+import type { TabItem } from "@/components/ui/expanded-tabs";
 import { RiMenu3Line, RiCloseLine, RiHomeLine, RiCodeSSlashLine, RiProjectorLine, RiContactsLine } from "@remixicon/react";
 import { useState } from "react";
 
@@ -12,7 +13,14 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
-  const navItems = [
+  const navItems: TabItem[] = [
+    { title: 'Home', icon: RiHomeLine },
+    { title: 'Skills', icon: RiCodeSSlashLine },
+    { title: 'Projects', icon: RiProjectorLine },
+    { title: 'Contact', icon: RiContactsLine },
+  ];
+
+  const navItemsWithIds = [
     { title: 'Home', icon: RiHomeLine, id: 'hero' },
     { title: 'Skills', icon: RiCodeSSlashLine, id: 'skills' },
     { title: 'Projects', icon: RiProjectorLine, id: 'projects' },
@@ -20,7 +28,7 @@ const Header = () => {
   ];
 
   const handleTabClick = (title: string) => {
-    const item = navItems.find(nav => nav.title === title);
+    const item = navItemsWithIds.find(nav => nav.title === title);
     if (item) {
       scrollToSection(item.id);
     }
@@ -68,7 +76,7 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-lg animate-fade-in">
             <div className="container mx-auto px-6 py-4 space-y-4">
-              {navItems.map((item) => (
+              {navItemsWithIds.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}

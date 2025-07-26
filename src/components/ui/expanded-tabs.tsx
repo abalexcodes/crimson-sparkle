@@ -1,9 +1,14 @@
+"use client"
+
 import * as React from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useOnClickOutside } from "usehooks-ts"
+
 import { cn } from "@/lib/utils"
 
 interface Tab {
   title: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ComponentType<{ className?: string; size?: number | string }>
   type?: never
 }
 
@@ -13,63 +18,116 @@ interface Separator {
   icon?: never
 }
 
-type TabItem = Tab | Separator
+export type TabItem = Tab | Separator
 
 interface ExpandedTabsProps {
   tabs: TabItem[]
-  activeColor?: string
   className?: string
+  activeColor?: string
+  onChange?: (index: number | null) => void
   onTabClick?: (title: string) => void
-  activeTab?: string
 }
 
-export function ExpandedTabs({ 
-  tabs, 
-  activeColor = "text-primary", 
-  className,
-  onTabClick,
-  activeTab 
-}: ExpandedTabsProps) {
-  const firstTab = tabs.find((tab): tab is Tab => tab.type !== "separator")
-  const [selectedTab, setSelectedTab] = React.useState(activeTab || firstTab?.title || "")
+const buttonVariants = {
+  initial: {
+    gap: 0,
+    paddingLeft: ".5rem",
+    paddingRight: ".5rem",
+  },
+  animate: (isSelected: boolean) => ({
+    gap: isSelected ? ".5rem" : 0,
+    paddingLeft: isSelected ? "1rem" : ".5rem",
+    paddingRight: isSelected ? "1rem" : ".5rem",
+  }),
+}
 
-  const handleTabClick = (title: string) => {
-    setSelectedTab(title)
-    onTabClick?.(title)
+const spanVariants = {
+  initial: { width: 0, opacity: 0 },
+  animate: { width: "auto", opacity: 1 },
+  exit: { width: 0, opacity: 0 },
+}
+
+const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.6 }
+
+export function ExpandedTabs({
+  tabs,
+  className,
+  activeColor = "text-primary",
+  onChange,
+  onTabClick,
+}: ExpandedTabsProps) {
+  const [selected, setSelected] = React.useState<number | null>(null)
+  const outsideClickRef = React.useRef<HTMLDivElement>(
+    null as unknown as HTMLDivElement
+  )
+
+  useOnClickOutside(outsideClickRef, () => {
+    setSelected(null)
+    onChange?.(null)
+  })
+
+  const handleSelect = (index: number) => {
+    setSelected(index)
+    onChange?.(index)
+    
+    // Find the tab and call onTabClick if it exists
+    const tab = tabs[index]
+    if (tab && tab.type !== "separator") {
+      onTabClick?.((tab as Tab).title)
+    }
   }
 
+  const Separator = () => (
+    <div className="h-[24px] w-[1.2px] bg-border" aria-hidden="true" />
+  )
+
   return (
-    <div className={cn(
-      "flex items-center gap-1 p-1 bg-muted/50 rounded-lg border backdrop-blur-sm",
-      className
-    )}>
-      {tabs.map((item, index) => {
-        if (item.type === "separator") {
-          return (
-            <div
-              key={`separator-${index}`}
-              className="w-px h-6 bg-border mx-1"
-            />
-          )
+    <div
+      ref={outsideClickRef}
+      className={cn(
+        "flex gap-2 rounded-2xl border bg-background p-1 shadow-sm",
+        className
+      )}
+    >
+      {tabs.map((tab, index) => {
+        if (tab.type === "separator") {
+          return <Separator key={`separator-${index}`} />
         }
 
-        const tabItem = item as Tab
-        const isActive = selectedTab === tabItem.title
-        const IconComponent = tabItem.icon
-
+        const tabItem = tab as Tab
+        const Icon = tabItem.icon
         return (
-          <button
+          <motion.button
             key={tabItem.title}
-            onClick={() => handleTabClick(tabItem.title)}
+            variants={buttonVariants}
+            initial={false}
+            animate="animate"
+            custom={selected === index}
+            onClick={() => handleSelect(index)}
+            transition={transition}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
-              "hover:bg-accent hover:text-accent-foreground",
-              isActive ? `${activeColor} bg-background shadow-sm` : "text-muted-foreground"
+              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+              selected === index
+                ? cn("bg-muted", activeColor)
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            <IconComponent className="w-4 h-4" />
-            <span className="whitespace-nowrap">{tabItem.title}</span>
-          </button>
+            <Icon size={20} />
+            <AnimatePresence initial={false}>
+              {selected === index && (
+                <motion.span
+                  variants={spanVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={transition}
+                  className="overflow-hidden"
+                >
+                  {tabItem.title}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
         )
       })}
     </div>
